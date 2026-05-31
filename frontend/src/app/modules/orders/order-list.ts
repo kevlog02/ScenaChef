@@ -1,8 +1,9 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OrderService } from '../../core/services/order.service';
 import { Order } from '../../core/models/models';
 import { OrderFormComponent } from './order-form';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-order-list',
@@ -117,14 +118,20 @@ import { OrderFormComponent } from './order-form';
     </div>
   `
 })
-export class OrderListComponent implements OnInit {
+export class OrderListComponent implements OnInit, OnDestroy {
   private readonly orderService = inject(OrderService);
 
   orders = signal<Order[]>([]);
   showForm = signal(false);
+  private eventsSource?: EventSource;
 
   ngOnInit(): void {
     this.loadOrders();
+    this.connectToOrderEvents();
+  }
+
+  ngOnDestroy(): void {
+    this.eventsSource?.close();
   }
 
   loadOrders(): void {
@@ -157,5 +164,17 @@ export class OrderListComponent implements OnInit {
       next: () => this.loadOrders(),
       error: (err) => alert(err.message || 'Error al actualizar estado')
     });
+  }
+
+  private connectToOrderEvents(): void {
+    this.eventsSource = new EventSource(`${environment.apiUrl}/orders/events`);
+
+    this.eventsSource.addEventListener('orders-changed', () => {
+      this.loadOrders();
+    });
+
+    this.eventsSource.onerror = (error) => {
+      console.error('SSE pedidos desconectado/reintentando:', error);
+    };
   }
 }

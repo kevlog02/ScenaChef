@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subscription, interval, startWith, switchMap } from 'rxjs';
 import { KitchenService } from '../../core/services/kitchen.service';
 import { KitchenOrder } from '../../core/models/models';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-kitchen-panel',
@@ -21,7 +21,7 @@ import { KitchenOrder } from '../../core/models/models';
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span class="text-xs text-gray-300 font-medium">Actualización automática (5s)</span>
+          <span class="text-xs text-gray-300 font-medium">Actualización en tiempo real</span>
         </div>
       </div>
 
@@ -113,25 +113,15 @@ export class KitchenPanelComponent implements OnInit, OnDestroy {
   private readonly kitchenService = inject(KitchenService);
 
   activeOrders = signal<KitchenOrder[]>([]);
-  private pollingSub?: Subscription;
+  private eventsSource?: EventSource;
 
   ngOnInit(): void {
-    // Poll the kitchen microservice every 5 seconds
-    this.pollingSub = interval(5000)
-      .pipe(
-        startWith(0),
-        switchMap(() => this.kitchenService.getActiveOrders())
-      )
-      .subscribe({
-        next: (data) => this.activeOrders.set(data),
-        error: (err) => console.error('Error polling kitchen orders:', err)
-      });
+    this.refreshActiveOrders();
+    this.connectToKitchenEvents();
   }
 
   ngOnDestroy(): void {
-    if (this.pollingSub) {
-      this.pollingSub.unsubscribe();
-    }
+    this.eventsSource?.close();
   }
 
   getMinutesElapsed(receivedAt: string): number {
@@ -143,12 +133,31 @@ export class KitchenPanelComponent implements OnInit, OnDestroy {
 
   changeStatus(order: KitchenOrder, nextStatus: string): void {
     this.kitchenService.updateOrderStatus(order.orderId, nextStatus).subscribe({
-      next: () => {
-        // Manually filter out if the nextStatus is 'LISTO' (since panel only displays PENDIENTE and EN_PREPARACION)
-        // or just trigger an immediate reload
-        this.kitchenService.getActiveOrders().subscribe(data => this.activeOrders.set(data));
-      },
+      next: () => this.refreshActiveOrders(),
       error: (err) => alert(err.message || 'Error al cambiar estado del pedido')
     });
+  }
+
+  private refreshActiveOrders(): void {
+    this.kitchenService.getActiveOrders().subscribe({
+      next: (data) => this.activeOrders.set(data),
+      error: (err) => console.error('Error cargando pedidos activos:', err)
+    });
+  }
+
+  private connectToKitchenEvents(): void {
+    this.eventsSource = new EventSource(`${environment.kitchenApiUrl}/kitchen/events`);
+
+    this.eventsSource.addEventListener('order-created', () => {
+      this.refreshActiveOrders();
+    });
+
+    this.eventsSource.addEventListener('order-status-updated', () => {
+      this.refreshActiveOrders();
+    });
+
+    this.eventsSource.onerror = (error) => {
+      console.error('SSE cocina desconectado/reintentando:', error);
+    };
   }
 }

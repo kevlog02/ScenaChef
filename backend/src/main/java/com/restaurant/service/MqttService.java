@@ -29,6 +29,9 @@ public class MqttService implements MqttCallback {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private OrderSseService orderSseService;
+
     @Value("${mqtt.topic.order.created}")
     private String topicOrderCreated;
 
@@ -79,6 +82,7 @@ public class MqttService implements MqttCallback {
                 
                 if (rowsUpdated > 0) {
                     log.info("Pedido #{} actualizado correctamente", event.getOrderId());
+                    orderSseService.publishOrdersChanged(event.getOrderId(), event.getStatus(), "mqtt-status-update");
                 } else {
                     log.warn("No se encontró el pedido #{} para actualizar", event.getOrderId());
                 }

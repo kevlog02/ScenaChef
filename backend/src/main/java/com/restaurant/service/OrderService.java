@@ -39,6 +39,9 @@ public class OrderService {
     @Autowired
     private MqttService mqttService;
 
+    @Autowired
+    private OrderSseService orderSseService;
+
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }
@@ -107,6 +110,7 @@ public class OrderService {
         event.setCreatedAt(savedOrder.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 
         mqttService.publishOrderCreated(event);
+        orderSseService.publishOrdersChanged(savedOrder.getId(), savedOrder.getStatus().name(), "backend-create");
 
         return savedOrder;
     }
@@ -114,6 +118,8 @@ public class OrderService {
     public Order updateOrderStatus(Long id, OrderStatus status) {
         Order order = getOrderById(id);
         order.setStatus(status);
-        return orderRepository.save(order);
+        Order updatedOrder = orderRepository.save(order);
+        orderSseService.publishOrdersChanged(updatedOrder.getId(), updatedOrder.getStatus().name(), "backend-status-update");
+        return updatedOrder;
     }
 }

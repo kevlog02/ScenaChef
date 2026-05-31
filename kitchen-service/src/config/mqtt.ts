@@ -1,5 +1,6 @@
 import mqtt, { MqttClient } from 'mqtt';
 import { KitchenOrder } from '../models/KitchenOrder';
+import { broadcastKitchenEvent } from '../services/sse';
 
 const TOPIC_ORDER_CREATED = process.env.MQTT_TOPIC_ORDER_CREATED || 'restaurant/orders/created';
 const TOPIC_ORDER_STATUS  = process.env.MQTT_TOPIC_ORDER_STATUS  || 'restaurant/orders/status';
@@ -59,6 +60,7 @@ async function handleOrderCreated(data: any): Promise<void> {
         items:       data.items,
         status:      'PENDIENTE'
       });
+      broadcastKitchenEvent('order-created', { orderId: data.orderId, status: 'PENDIENTE' });
       console.log(`Pedido #${data.orderId} recibido y guardado en cocina`);
     } else {
       console.log(`Pedido #${data.orderId} ya existe en cocina, ignorando duplicado`);

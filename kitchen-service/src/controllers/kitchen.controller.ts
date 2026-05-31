@@ -1,6 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import { KitchenOrder } from '../models/KitchenOrder';
 import { publishStatusUpdate } from '../config/mqtt';
+import { broadcastKitchenEvent, openKitchenEventsStream } from '../services/sse';
+
+export const streamKitchenEvents = (req: Request, res: Response): void => {
+  openKitchenEventsStream(res);
+};
 
 export const getAllOrders = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -69,6 +74,7 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
 
     // Publish MQTT status update event
     publishStatusUpdate(orderId, status);
+    broadcastKitchenEvent('order-status-updated', { orderId, status });
 
     res.json({
       orderId: order.orderId,
