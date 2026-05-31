@@ -14,14 +14,9 @@ const port = process.env.PORT || 3000;
 
 // Setup Middleware
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost',
-    'http://localhost:4200',
-    'http://localhost',
-    'https://localhost'
-  ],
-  methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  origin: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['*'],
   credentials: true
 }));
 

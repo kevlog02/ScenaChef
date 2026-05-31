@@ -66,8 +66,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Allow local Angular development and production origins
-        config.setAllowedOrigins(List.of("http://localhost:4200", "http://localhost", "https://localhost"));
+        // Allow any origin so browser clients can connect from any host.
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
