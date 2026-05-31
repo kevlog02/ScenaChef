@@ -1,0 +1,26 @@
+{
+  "name": "kitchen-service",
+  "version": "1.0.0",
+  "description": "Kitchen Microservice for Restaurant System",
+  "main": "dist/app.js",
+  "scripts": {
+    "dev": "nodemon --exec ts-node src/app.ts",
+    "build": "tsc",
+    "start": "node dist/app.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "mongoose": "^8.4.1",
+    "mqtt": "^5.7.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^20.14.2",
+    "ts-node": "^10.9.2",
+    "nodemon": "^3.1.3"
+  }
+}

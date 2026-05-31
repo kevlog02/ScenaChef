@@ -1,0 +1,11 @@
+.env
+*.p12
+*.jks
+node_modules/
+dist/
+target/
+*.class
+.idea/
+.vscode/
+*.log
+.angular/

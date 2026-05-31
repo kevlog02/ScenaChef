@@ -1,0 +1,178 @@
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ProductService } from '../../core/services/product.service';
+import { AuthService } from '../../core/services/auth.service';
+import { Product } from '../../core/models/models';
+import { ProductFormComponent } from './product-form';
+
+@Component({
+  selector: 'app-product-list',
+  standalone: true,
+  imports: [CommonModule, ProductFormComponent],
+  template: `
+    <div class="space-y-6">
+      <!-- Header Area -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-extrabold tracking-tight">Catálogo de Productos</h1>
+          <p class="text-sm text-gray-400">Verifica o gestiona el menú del restaurante</p>
+        </div>
+        <button
+          *ngIf="isAdmin()"
+          (click)="openCreateForm()"
+          class="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-500 font-semibold text-sm rounded-xl transition duration-150 shadow-lg shadow-purple-500/10"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+          </svg>
+          <span>Nuevo Producto</span>
+        </button>
+      </div>
+
+      <!-- Main Products Table Card -->
+      <div class="bg-[#141822] border border-white/10 rounded-2xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="bg-[#1e2538]/50 border-b border-white/10 text-gray-400 font-semibold uppercase tracking-wider text-xs">
+                <th class="p-4">ID</th>
+                <th class="p-4">Nombre</th>
+                <th class="p-4">Descripción</th>
+                <th class="p-4">Categoría</th>
+                <th class="p-4">Precio</th>
+                <th class="p-4">Disponibilidad</th>
+                <th class="p-4 text-right" *ngIf="isAdmin()">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+              <tr *ngFor="let product of products()" class="hover:bg-white/[0.02] transition">
+                <td class="p-4 font-mono text-xs text-gray-400">#{{ product.id }}</td>
+                <td class="p-4">
+                  <span class="font-medium text-white">{{ product.name }}</span>
+                </td>
+                <td class="p-4 text-gray-400 max-w-xs truncate">{{ product.description || 'Sin descripción' }}</td>
+                <td class="p-4">
+                  <span class="px-2 py-1 bg-[#1e2538] text-gray-300 text-xs font-medium rounded-lg">
+                    {{ product.category }}
+                  </span>
+                </td>
+                <td class="p-4 font-mono font-semibold text-purple-400">
+                  \${{ product.price | number:'1.2-2' }}
+                </td>
+                <td class="p-4">
+                  <span
+                    [ngClass]="product.available ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/15' : 'bg-red-500/10 text-red-400 border border-red-500/15'"
+                    class="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-semibold rounded-md border"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full" [ngClass]="product.available ? 'bg-emerald-400' : 'bg-red-400'"></span>
+                    {{ product.available ? 'Disponible' : 'Agotado' }}
+                  </span>
+                </td>
+                <td class="p-4 text-right" *ngIf="isAdmin()">
+                  <div class="inline-flex items-center gap-2">
+                    <button
+                      (click)="openEditForm(product)"
+                      class="p-2 text-gray-400 hover:text-purple-400 hover:bg-purple-500/10 rounded-lg transition"
+                      title="Editar"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                      </svg>
+                    </button>
+                    <button
+                      (click)="deleteProduct(product)"
+                      class="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
+                      title="Eliminar"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="products().length === 0">
+                <td colspan="7" class="p-8 text-center text-gray-500">
+                  No hay productos cargados en el menú
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Drawer Form overlay -->
+      <div
+        *ngIf="showForm()"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-end transition-opacity duration-300"
+        (click)="closeForm()"
+      >
+        <div
+          class="w-full max-w-md bg-[#141822] h-full border-l border-white/10 p-6 overflow-y-auto shadow-2xl flex flex-col justify-between"
+          (click)="$event.stopPropagation()"
+        >
+          <app-product-form
+            [selectedProduct]="selectedProduct()"
+            (saved)="onFormSaved()"
+            (cancelled)="closeForm()"
+          ></app-product-form>
+        </div>
+      </div>
+    </div>
+  `
+})
+export class ProductListComponent implements OnInit {
+  private readonly productService = inject(ProductService);
+  private readonly authService = inject(AuthService);
+
+  products = signal<Product[]>([]);
+  showForm = signal(false);
+  selectedProduct = signal<Product | null>(null);
+
+  ngOnInit(): void {
+    this.loadProducts();
+  }
+
+  loadProducts(): void {
+    // If Admin, load all products (available + unavailable)
+    // If Cajero, load all as well (or available ones, but usually admins want all, let's load all since it's the main products database endpoint)
+    this.productService.getAll().subscribe({
+      next: (data) => this.products.set(data),
+      error: (err) => console.error('Error al cargar productos:', err)
+    });
+  }
+
+  isAdmin(): boolean {
+    return this.authService.getUserRole() === 'ADMIN';
+  }
+
+  openCreateForm(): void {
+    this.selectedProduct.set(null);
+    this.showForm.set(true);
+  }
+
+  openEditForm(product: Product): void {
+    this.selectedProduct.set(product);
+    this.showForm.set(true);
+  }
+
+  closeForm(): void {
+    this.showForm.set(false);
+    this.selectedProduct.set(null);
+  }
+
+  onFormSaved(): void {
+    this.closeForm();
+    this.loadProducts();
+  }
+
+  deleteProduct(product: Product): void {
+    if (!product.id) return;
+    if (confirm(`¿Estás seguro de que deseas eliminar ${product.name}?`)) {
+      this.productService.delete(product.id).subscribe({
+        next: () => this.loadProducts(),
+        error: (err) => alert(err.message || 'Error al eliminar producto')
+      });
+    }
+  }
+}

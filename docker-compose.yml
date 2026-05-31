@@ -1,0 +1,170 @@
+version: '3.9'
+
+networks:
+  restaurant-network:
+    driver: bridge
+
+volumes:
+  postgres_primary_data:
+  postgres_replica_data:
+  mongodb_data:
+  mosquitto_data:
+  mosquitto_log:
+
+services:
+
+  # ─── PostgreSQL Primary ────────────────────────────────────
+  postgres-primary:
+    image: postgres:15
+    container_name: postgres-primary
+    environment:
+      POSTGRES_DB: restaurant_db
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_primary_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init:/docker-entrypoint-initdb.d
+    networks:
+      - restaurant-network
+    ports:
+      - "5432:5432"
+    command: ["postgres", "-c", "wal_level=replica", "-c", "max_wal_senders=5", "-c", "wal_keep_size=64MB"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d restaurant_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── PostgreSQL Replica ────────────────────────────────────
+  postgres-replica:
+    image: postgres:15
+    container_name: postgres-replica
+    environment:
+      POSTGRES_DB: restaurant_db
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGPASSWORD: replicator_password
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+    entrypoint: >
+      bash -c "
+      if [ ! -s /var/lib/postgresql/data/PG_VERSION ]; then
+        echo 'Running pg_basebackup...';
+        rm -rf /var/lib/postgresql/data/*;
+        until pg_isready -h postgres-primary -p 5432 -U ${DB_USERNAME}; do
+          echo 'Waiting for primary...';
+          sleep 1;
+        done;
+        pg_basebackup -h postgres-primary -D /var/lib/postgresql/data -U replicator -Fp -Xs -P -R;
+      fi;
+      echo 'Starting PostgreSQL Standby...';
+      exec docker-entrypoint.sh postgres;
+      "
+
+  # ─── MongoDB ──────────────────────────────────────────────
+  mongodb:
+    image: mongo:7
+    container_name: kitchen-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: kitchen_db
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - restaurant-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/kitchen_db --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Mosquitto MQTT Broker ────────────────────────────────
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto
+    volumes:
+      - ./infrastructure/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    ports:
+      - "1883:1883"
+    networks:
+      - restaurant-network
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 2 mosquitto_sub -h localhost -t health -C 1 || exit 0"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Backend Spring Boot ──────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: restaurant-backend
+    environment:
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - SSL_KEY_PASSWORD=${SSL_KEY_PASSWORD}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-primary:5432/restaurant_db
+      - MQTT_BROKER_URL=tcp://mosquitto:1883
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-check-certificate -q -O- https://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ─── Kitchen Microservice Node.js ─────────────────────────
+  kitchen-service:
+    build:
+      context: ./kitchen-service
+      dockerfile: Dockerfile
+    container_name: kitchen-service
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongodb:27017/kitchen_db
+      - MQTT_BROKER_URL=mqtt://mosquitto:1883
+    ports:
+      - "3000:3000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+
+  # ─── Frontend Angular ─────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - API_URL=https://localhost:8080/api
+        - KITCHEN_API_URL=http://localhost:3000/api
+    container_name: restaurant-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - kitchen-service
+    networks:
+      - restaurant-network
