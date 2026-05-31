@@ -1,0 +1,64 @@
+<div class="relative min-h-screen flex items-center justify-center bg-[#0d0f14] overflow-hidden text-white font-sans">
+  <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-[100px] animate-pulse"></div>
+  <div class="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[120px] animate-bounce duration-[10s]"></div>
+
+  <div class="relative w-full max-w-md p-8 mx-4 bg-[#141822]/60 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-10 transition-all hover:border-white/15">
+    <div class="text-center mb-8">
+      <div class="inline-flex p-3 bg-purple-600/10 border border-purple-500/20 rounded-xl mb-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      </div>
+      <h2 class="text-2xl font-bold tracking-tight bg-linear-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Figue Restaurante</h2>
+      <p class="text-sm text-gray-400 mt-1">Ingresa tus credenciales para acceder</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm" class="space-y-6">
+      <div>
+        <label for="username" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Usuario</label>
+        <div class="relative">
+          <input
+            type="text"
+            id="username"
+            name="username"
+            [(ngModel)]="username"
+            required
+            class="w-full pl-4 pr-4 py-3 bg-[#1e2538]/50 border border-white/5 rounded-xl focus:border-purple-500 focus:bg-[#1e2538]/80 focus:ring-0 transition outline-none text-sm placeholder-gray-500"
+            placeholder="Ej. admin"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label for="password" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Contraseña</label>
+        <div class="relative">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            [(ngModel)]="password"
+            required
+            class="w-full pl-4 pr-4 py-3 bg-[#1e2538]/50 border border-white/5 rounded-xl focus:border-purple-500 focus:bg-[#1e2538]/80 focus:ring-0 transition outline-none text-sm placeholder-gray-500"
+            placeholder="••••••••"
+          />
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage()" class="p-3 bg-red-900/30 border border-red-500/20 text-red-200 text-xs rounded-xl flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+        </svg>
+        <span>{{ errorMessage() }}</span>
+      </div>
+
+      <button
+        type="submit"
+        [disabled]="loading() || !loginForm.form.valid"
+        class="w-full py-3 px-4 bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:from-purple-600/40 disabled:to-indigo-600/40 disabled:cursor-not-allowed font-medium text-sm rounded-xl shadow-lg shadow-purple-500/10 hover:shadow-purple-500/20 transition-all flex justify-center items-center gap-2"
+      >
+        <span *ngIf="loading()" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+        <span>{{ loading() ? 'Iniciando sesión...' : 'Entrar' }}</span>
+      </button>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,41 @@
+<div class="min-h-screen bg-[#0d0f14] text-white font-sans flex flex-col">
+  <nav class="bg-[#141822] border-b border-white/10 px-6 py-4 flex items-center justify-between sticky top-0 z-40">
+    <div class="flex items-center gap-8">
+      <div class="flex items-center gap-2">
+        <div class="p-2 bg-purple-600/15 border border-purple-500/20 rounded-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+        </div>
+        <span class="font-bold text-lg bg-linear-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Figue</span>
+      </div>
+
+      <div class="hidden md:flex items-center gap-1">
+        <a *ngIf="isAdmin()" routerLink="/usuarios" routerLinkActive="bg-[#1d2433] text-purple-400 border border-purple-500/10" class="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white rounded-lg transition">Usuarios</a>
+        <a *ngIf="isAdmin() || isCajero()" routerLink="/productos" routerLinkActive="bg-[#1d2433] text-purple-400 border border-purple-500/10" class="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white rounded-lg transition">Productos</a>
+        <a *ngIf="isCajero()" routerLink="/pedidos" routerLinkActive="bg-[#1d2433] text-purple-400 border border-purple-500/10" class="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white rounded-lg transition">Pedidos</a>
+        <a *ngIf="isCocinero()" routerLink="/cocina" routerLinkActive="bg-[#1d2433] text-purple-400 border border-purple-500/10" class="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white rounded-lg transition">Cocina</a>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <div class="text-right hidden sm:block">
+        <p class="text-sm font-medium text-gray-200">{{ username() }}</p>
+        <p class="text-xs text-gray-400 uppercase tracking-wider font-semibold">{{ role() }}</p>
+      </div>
+      <div class="h-8 w-px bg-white/10 hidden sm:block"></div>
+      <button (click)="logout()" class="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-red-400 hover:text-white hover:bg-red-500/10 border border-red-500/10 hover:border-red-500/20 rounded-lg transition">Cerrar Sesión</button>
+    </div>
+  </nav>
+
+  <div class="md:hidden flex items-center justify-around bg-[#141822]/80 border-b border-white/5 py-2 px-4">
+    <a *ngIf="isAdmin()" routerLink="/usuarios" routerLinkActive="text-purple-400 font-bold" class="text-xs text-gray-400 transition">Usuarios</a>
+    <a *ngIf="isAdmin() || isCajero()" routerLink="/productos" routerLinkActive="text-purple-400 font-bold" class="text-xs text-gray-400 transition">Productos</a>
+    <a *ngIf="isCajero()" routerLink="/pedidos" routerLinkActive="text-purple-400 font-bold" class="text-xs text-gray-400 transition">Pedidos</a>
+    <a *ngIf="isCocinero()" routerLink="/cocina" routerLinkActive="text-purple-400 font-bold" class="text-xs text-gray-400 transition">Cocina</a>
+  </div>
+
+  <main class="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
+    <router-outlet></router-outlet>
+  </main>
+</div>
