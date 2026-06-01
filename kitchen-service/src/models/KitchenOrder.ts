@@ -54,16 +54,14 @@ const KitchenOrderSchema = new Schema<IKitchenOrder>({
   }
 }, {
   collection: 'kitchenorders',
-  timestamps: false // manual updatedAt handling
+  timestamps: false
 });
 
-// Middleware: update updatedAt before saving
 KitchenOrderSchema.pre('save', function(next) {
   this.updatedAt = new Date();
   next();
 });
 
-// Setup indexes
 KitchenOrderSchema.index({ orderId: 1 }, { unique: true });
 KitchenOrderSchema.index({ status: 1 });
 KitchenOrderSchema.index({ status: 1, receivedAt: 1 });

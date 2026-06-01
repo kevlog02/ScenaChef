@@ -30,7 +30,7 @@ export class OrderFormComponent implements OnInit {
   loading = signal(false);
   errorMessage = signal<string | null>(null);
 
-  // Compute filtered product list based on search query
+
   filteredProducts = computed(() => {
     const query = this.searchQuery.toLowerCase().trim();
     if (!query) return this.products();
@@ -40,7 +40,7 @@ export class OrderFormComponent implements OnInit {
     );
   });
 
-  // Compute total running sum
+
   totalOrderSum = computed(() => {
     return this.selectedItems().reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
   });

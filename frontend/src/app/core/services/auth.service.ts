@@ -11,7 +11,6 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = environment.apiUrl;
 
-  // Signal to track logged in user's role and username
   readonly userRole = signal<string | null>(localStorage.getItem('user_role'));
   readonly username = signal<string | null>(localStorage.getItem('username'));
 

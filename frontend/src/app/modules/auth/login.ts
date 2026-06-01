@@ -28,7 +28,6 @@ export class LoginComponent {
     this.authService.login(this.username, this.password).subscribe({
       next: (response) => {
         this.loading.set(false);
-        // Redirect according to user role
         if (response.role === 'ADMIN') {
           this.router.navigate(['/usuarios']);
         } else if (response.role === 'CAJERO') {

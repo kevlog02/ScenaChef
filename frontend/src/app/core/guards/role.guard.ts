@@ -13,7 +13,6 @@ export const roleGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  // If unauthorized, redirect to login
   router.navigate(['/login']);
   return false;
 };

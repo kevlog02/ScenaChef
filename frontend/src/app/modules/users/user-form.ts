@@ -21,7 +21,7 @@ export class UserFormComponent implements OnChanges {
   loading = signal(false);
   errorMessage = signal<string | null>(null);
 
-  // default empty user state
+
   user: User = {
     name: '',
     username: '',
@@ -38,7 +38,7 @@ export class UserFormComponent implements OnChanges {
         this.user = {
           name: selected.name,
           username: selected.username,
-          password: '', // do not display password
+          password: '',
           role: selected.role,
           active: selected.active
         };

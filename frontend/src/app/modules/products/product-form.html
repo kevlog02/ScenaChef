@@ -41,7 +41,9 @@
         </label>
       </div>
 
-      <div *ngIf="errorMessage()" class="p-3 bg-red-50 border border-red-100 text-red-700 text-xs rounded-xl">{{ errorMessage() }}</div>
+      @if (errorMessage()) {
+        <div class="p-3 bg-red-50 border border-red-100 text-red-700 text-xs rounded-xl">{{ errorMessage() }}</div>
+      }
     </form>
   </div>
 

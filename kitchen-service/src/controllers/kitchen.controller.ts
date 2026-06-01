@@ -20,7 +20,7 @@ export const getActiveOrders = async (req: Request, res: Response, next: NextFun
   try {
     const orders = await KitchenOrder.find({
       status: { $in: ['PENDIENTE', 'EN_PREPARACION'] }
-    }).sort({ receivedAt: 1 }); // oldest first
+    }).sort({ receivedAt: 1 });
     res.json(orders);
   } catch (error) {
     next(error);
@@ -68,11 +68,8 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
     }
 
     order.status = status as 'PENDIENTE' | 'EN_PREPARACION' | 'LISTO';
-    // Mongoose post-save / pre-save hooks will handle updatedAt, but we can also set it manually or save the model.
-    // Saving the model triggers pre-save validation and hooks.
     await order.save();
 
-    // Publish MQTT status update event
     publishStatusUpdate(orderId, status);
     broadcastKitchenEvent('order-status-updated', { orderId, status });
 

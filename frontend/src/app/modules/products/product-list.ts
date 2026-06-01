@@ -24,8 +24,6 @@ export class ProductListComponent implements OnInit {
   }
 
   loadProducts(): void {
-    // If Admin, load all products (available + unavailable)
-    // If Cajero, load all as well (or available ones, but usually admins want all, let's load all since it's the main products database endpoint)
     this.productService.getAll().subscribe({
       next: (data) => this.products.set(data),
       error: (err) => console.error('Error al cargar productos:', err)
