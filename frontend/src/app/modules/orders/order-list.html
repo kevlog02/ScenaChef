@@ -1,67 +1,84 @@
 <div class="space-y-6">
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div>
-      <h1 class="text-3xl font-extrabold tracking-tight">Gestión de Pedidos</h1>
-      <p class="text-sm text-gray-400">Administra los pedidos de las mesas y entrega los platos listos</p>
+      <h1 class="text-3xl font-extrabold tracking-tight text-slate-800">Gestión de Pedidos</h1>
+      <p class="text-sm text-slate-500">Administra los pedidos de las mesas y entrega los platos listos</p>
     </div>
-    <button (click)="openCreateForm()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-500 font-semibold text-sm rounded-xl transition duration-150 shadow-lg shadow-purple-500/10">
+    <button (click)="openCreateForm()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-orange-600 hover:bg-orange-500 font-semibold text-sm text-white rounded-xl transition duration-150 shadow-lg shadow-orange-500/10">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
         <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
       </svg>
       <span>Nuevo Pedido</span>
     </button>
   </div>
-
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <div *ngFor="let order of orders()" class="bg-[#141822] border border-white/10 rounded-2xl p-5 shadow-xl flex flex-col justify-between hover:border-white/15 transition relative">
+    <div *ngFor="let order of orders()" class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col justify-between hover:border-orange-300 hover:shadow-md transition relative">
       <div class="space-y-4">
-        <div class="flex items-center justify-between">
+        <!-- Ticket Header -->
+        <div class="flex items-center justify-between pb-3">
           <div>
-            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Mesa</span>
-            <span class="block text-2xl font-black text-white">#{{ order.tableNumber }}</span>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mesa</span>
+            <span class="block text-3xl font-black text-slate-800 leading-none">#{{ order.tableNumber }}</span>
           </div>
           <span [ngClass]="{
-            'bg-yellow-500/10 text-yellow-500 border border-yellow-500/15': order.status === 'PENDIENTE',
-            'bg-blue-500/10 text-blue-500 border border-blue-500/15': order.status === 'EN_PREPARACION',
-            'bg-emerald-500/10 text-emerald-400 border border-emerald-500/15': order.status === 'LISTO',
-            'bg-gray-500/10 text-gray-400 border border-gray-500/15': order.status === 'ENTREGADO'
-          }" class="px-2.5 py-1 text-xs font-bold rounded-lg uppercase tracking-wide border">
+            'bg-amber-50 text-amber-700 border border-amber-200': order.status === 'PENDIENTE',
+            'bg-blue-50 text-blue-700 border border-blue-200': order.status === 'EN_PREPARACION',
+            'bg-emerald-50 text-emerald-700 border border-emerald-200': order.status === 'LISTO',
+            'bg-slate-100 text-slate-600 border border-slate-200': order.status === 'ENTREGADO'
+          }" class="px-2.5 py-1 text-xs font-bold rounded-md uppercase tracking-wide border">
             {{ order.status }}
           </span>
         </div>
 
-        <div class="space-y-2">
-          <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Productos</h4>
-          <ul class="divide-y divide-white/5 text-sm max-h-40 overflow-y-auto pr-1">
+        <!-- Ticket Dashed Divider & Notches -->
+        <div class="relative h-px my-1">
+          <!-- Dashed line extends to padding edges -->
+          <div class="absolute -left-5 -right-5 border-t border-dashed border-slate-200"></div>
+          <!-- Left punch hole -->
+          <div class="absolute -left-[29px] -top-2 w-4 h-4 bg-slate-50 rounded-full border border-slate-200 z-10"></div>
+          <!-- Right punch hole -->
+          <div class="absolute -right-[29px] -top-2 w-4 h-4 bg-slate-50 rounded-full border border-slate-200 z-10"></div>
+        </div>
+
+        <!-- Ticket Body -->
+        <div class="space-y-2 pt-2">
+          <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Productos</h4>
+          <ul class="divide-y divide-slate-100 text-sm max-h-40 overflow-y-auto pr-1">
             <li *ngFor="let item of order.items" class="py-1.5 flex items-center justify-between">
-              <span class="text-gray-200"><span class="font-mono text-purple-400 font-bold mr-1">{{ item.quantity }}x</span> {{ item.product.name }}</span>
-              <span class="font-mono text-gray-400 text-xs">${{ (item.unitPrice * item.quantity) | number:'1.2-2' }}</span>
+              <span class="text-slate-700"><span class="font-mono text-orange-600 font-bold mr-1">{{ item.quantity }}x</span> {{ item.product.name }}</span>
+              <span class="font-mono text-slate-450 text-xs">${{ (item.unitPrice * item.quantity) | number:'1.2-2' }}</span>
             </li>
           </ul>
         </div>
       </div>
 
-      <div class="mt-6 pt-4 border-t border-white/10 flex items-center justify-between gap-4">
-        <div>
-          <span class="block text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Total</span>
-          <span class="text-lg font-black text-white font-mono">${{ getOrderTotal(order) | number:'1.2-2' }}</span>
-        </div>
-
-        <button *ngIf="order.status === 'LISTO'" (click)="entregarPedido(order)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 font-semibold text-xs rounded-xl transition-all shadow-lg shadow-emerald-600/10">Marcar Entregado</button>
+      <!-- Bottom Dashed Divider -->
+      <div class="relative h-px my-3">
+        <div class="absolute -left-5 -right-5 border-t border-dashed border-slate-200"></div>
       </div>
 
-      <div class="absolute top-2 right-2 text-[9px] text-gray-500 font-mono">
+      <!-- Ticket Footer (Total & Actions) -->
+      <div class="flex items-center justify-between gap-4 pt-1">
+        <div>
+          <span class="block text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Total</span>
+          <span class="text-lg font-black text-slate-800 font-mono">${{ getOrderTotal(order) | number:'1.2-2' }}</span>
+        </div>
+
+        <button *ngIf="order.status === 'LISTO'" (click)="entregarPedido(order)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-lg transition-all shadow-md">Marcar Entregado</button>
+      </div>
+
+      <div class="absolute top-2 right-2 text-[9px] text-slate-350 font-mono">
         #{{ order.id }} - {{ order.createdAt | date:'HH:mm' }}
       </div>
     </div>
 
-    <div *ngIf="orders().length === 0" class="col-span-full bg-[#141822] border border-white/10 border-dashed p-12 rounded-2xl text-center text-gray-500">
+    <div *ngIf="orders().length === 0" class="col-span-full bg-white border border-slate-200 border-dashed p-12 rounded-2xl text-center text-slate-450">
       No hay pedidos registrados
     </div>
   </div>
 
-  <div *ngIf="showForm()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-end transition-opacity duration-300" (click)="closeForm()">
-    <div class="w-full max-w-2xl bg-[#141822] h-full border-l border-white/10 p-6 overflow-y-auto shadow-2xl flex flex-col justify-between" (click)="$event.stopPropagation()">
+  <div *ngIf="showForm()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex justify-end transition-opacity duration-300" (click)="closeForm()">
+    <div class="w-full max-w-2xl bg-white h-full border-l border-slate-100 p-6 overflow-y-auto shadow-2xl flex flex-col justify-between" (click)="$event.stopPropagation()">
       <app-order-form (saved)="onFormSaved()" (cancelled)="closeForm()"></app-order-form>
     </div>
   </div>
