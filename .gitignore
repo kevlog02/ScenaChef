@@ -1,5 +1,4 @@
 .env
-*.p12
 *.jks
 node_modules/
 dist/
